@@ -181,7 +181,11 @@ class CollectionPage(QWidget):
 
         for item in activity["items"]:
             if item["count"] == 0:
-                self.items.addItem(f"☐ {item['name']}")
+
+                row = QListWidgetItem(f"☐ {item['name']}")
+                row.setForeground(Qt.red)
+
+                self.items.addItem(row)
 
         if self.hideOwned.isChecked():
             return
@@ -193,4 +197,8 @@ class CollectionPage(QWidget):
 
         for item in activity["items"]:
             if item["count"] > 0:
-                self.items.addItem(f"☑ {item['name']}")
+
+                row = QListWidgetItem(f"☑ {item['name']}")
+                row.setForeground(Qt.darkGreen)
+
+                self.items.addItem(row)
