@@ -1,18 +1,24 @@
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QLabel,
+)
 
 
 class ActivitiesPage(QWidget):
+
     def __init__(self):
         super().__init__()
 
         layout = QVBoxLayout()
 
-        title = QLabel("Activities")
-        title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet("font-size:24px;font-weight:bold;")
-
+        title = QLabel("<h1>Activities</h1>")
         layout.addWidget(title)
+
+        layout.addWidget(
+            QLabel("Activities page coming soon.")
+        )
+
         layout.addStretch()
 
         self.setLayout(layout)

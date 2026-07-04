@@ -33,10 +33,11 @@ QListWidget::item:selected{
 }
 
 QToolBar{
-    background:#2b2d31;
-    spacing:8px;
+    background:#2B2D31;
+    border:none;
+    spacing:12px;
+    padding:8px;
 }
-
 QPushButton{
     background:#5865F2;
     border:none;
@@ -63,6 +64,48 @@ QPushButton:hover{
 #CardValue{
     font-size:22pt;
     font-weight:bold;
+}
+                      
+QProgressBar{
+    border:none;
+    background:#1B1D20;
+    border-radius:10px;
+    height:28px;
+}
+
+QProgressBar::chunk{
+    background:#4CAF50;
+    border-radius:10px;
+}
+
+#StatCard:hover{
+    background:#36393F;
+}
+QTableWidget{
+    background:#2B2D31;
+    border:none;
+    gridline-color:#3A3D44;
+    border-radius:10px;
+}
+
+QHeaderView::section{
+    background:#202225;
+    color:white;
+    padding:10px;
+    border:none;
+    font-weight:bold;
+}
+
+QLineEdit{
+    background:#2B2D31;
+    border:1px solid #444;
+    border-radius:8px;
+    padding:8px;
+    color:white;
+}
+
+QLineEdit:focus{
+    border:1px solid #5865F2;
 }
 """)
     window.show()
