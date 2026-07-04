@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 
 from core.settings import load_settings
 from engine.parser import load_player
-
+from gui.widgets.activity_row import ActivityRow
 
 class CollectionPage(QWidget):
 
@@ -141,6 +141,23 @@ class CollectionPage(QWidget):
             )
             item = QListWidgetItem(text)
             item.setData(Qt.UserRole, activity)
+
+            percent = activity["percent"]
+
+            if percent >= 100:
+                item.setBackground(Qt.darkGreen)
+
+            elif percent >= 75:
+                item.setBackground(Qt.darkGreen)
+
+            elif percent >= 50:
+                item.setBackground(Qt.darkYellow)
+
+            elif percent >= 25:
+                item.setBackground(Qt.darkRed)
+
+            else:
+                item.setBackground(Qt.red)
 
             self.activityList.addItem(item)
 
