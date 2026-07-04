@@ -1,12 +1,14 @@
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QLineEdit,
+    QScrollArea,
     QLabel,
-    QListWidget,
 )
 
 from core.settings import load_settings
 from engine.parser import load_player
+from gui.widgets.activity_card import ActivityCard
 
 
 class CollectionPage(QWidget):
@@ -14,52 +16,63 @@ class CollectionPage(QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = QVBoxLayout()
+        settings = load_settings()
+        self.player = load_player(settings["player"])
+
+        root = QVBoxLayout()
 
         title = QLabel("<h1>Collection</h1>")
-        layout.addWidget(title)
+        root.addWidget(title)
 
-        settings = load_settings()
-        player = load_player(settings["player"])
+        subtitle = QLabel(
+            "Browse every collection activity and your completion progress."
+        )
+        root.addWidget(subtitle)
 
-        self.list = QListWidget()
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Search activities...")
+        self.search.textChanged.connect(self.filter)
 
-        activities = []
+        root.addWidget(self.search)
 
-        for activity in player["activities"]:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
 
-            items = player["activities"][activity]
+        container = QWidget()
+        self.layout = QVBoxLayout(container)
+        self.layout.setSpacing(12)
+
+        self.cards = []
+
+        for activity, items in sorted(self.player["activities"].items()):
 
             total = len(items)
+            complete = sum(1 for i in items if i["count"] > 0)
 
-            complete = sum(
-                1
-                for item in items
-                if item["count"] > 0
+            nice_name = activity.replace("_", " ").title()
+
+            card = ActivityCard(
+                nice_name,
+                complete,
+                total,
             )
 
-            percent = (complete / total) * 100 if total else 0
+            self.layout.addWidget(card)
 
-            if percent >= 90:
-                icon = "🟢"
-            elif percent >= 50:
-                icon = "🟡"
-            else:
-                icon = "🔴"
+            self.cards.append((nice_name.lower(), card))
 
-            activities.append(
-                (
-                    percent,
-                    f"{icon} {activity.replace('_',' ').title()}\n"
-                    f"    {complete}/{total} items ({percent:.0f}%)"
-                )
-            )
+        self.layout.addStretch()
 
-        activities.sort(reverse=True)
+        scroll.setWidget(container)
 
-        for _, text in activities:
-            self.list.addItem(text)
+        root.addWidget(scroll)
 
-        layout.addWidget(self.list)
+        self.setLayout(root)
 
-        self.setLayout(layout)
+    def filter(self, text):
+
+        text = text.lower()
+
+        for name, card in self.cards:
+            card.setVisible(text in name)
