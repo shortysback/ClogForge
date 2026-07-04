@@ -1,14 +1,17 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QWidget,
+    QHBoxLayout,
     QVBoxLayout,
-    QLineEdit,
-    QScrollArea,
+    QListWidget,
+    QListWidgetItem,
     QLabel,
+    QLineEdit,
+    QProgressBar,
 )
 
 from core.settings import load_settings
 from engine.parser import load_player
-from gui.widgets.activity_card import ActivityCard
 
 
 class CollectionPage(QWidget):
@@ -19,60 +22,129 @@ class CollectionPage(QWidget):
         settings = load_settings()
         self.player = load_player(settings["player"])
 
-        root = QVBoxLayout()
+        root = QHBoxLayout(self)
 
-        title = QLabel("<h1>Collection</h1>")
-        root.addWidget(title)
+        #
+        # LEFT PANEL
+        #
 
-        subtitle = QLabel(
-            "Browse every collection activity and your completion progress."
-        )
-        root.addWidget(subtitle)
+        left = QVBoxLayout()
 
         self.search = QLineEdit()
         self.search.setPlaceholderText("Search activities...")
         self.search.textChanged.connect(self.filter)
 
-        root.addWidget(self.search)
+        self.activityList = QListWidget()
+        self.activityList.currentItemChanged.connect(self.load_activity)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
+        left.addWidget(self.search)
+        left.addWidget(self.activityList)
 
-        container = QWidget()
-        self.layout = QVBoxLayout(container)
-        self.layout.setSpacing(12)
+        #
+        # RIGHT PANEL
+        #
 
-        self.cards = []
+        right = QVBoxLayout()
+
+        self.title = QLabel("Select an Activity")
+        self.title.setObjectName("CardTitle")
+
+        self.progress = QProgressBar()
+        self.progress.setTextVisible(False)
+        self.progress.setFixedHeight(24)
+
+        self.percent = QLabel("")
+        self.percent.setAlignment(Qt.AlignCenter)
+
+        self.items = QListWidget()
+
+        right.addWidget(self.title)
+        right.addWidget(self.progress)
+        right.addWidget(self.percent)
+        right.addWidget(self.items)
+
+        root.addLayout(left, 1)
+        root.addLayout(right, 2)
+
+        self.activities = []
 
         for activity, items in sorted(self.player["activities"].items()):
 
             total = len(items)
-            complete = sum(1 for i in items if i["count"] > 0)
+            complete = sum(i["count"] > 0 for i in items)
+            percent = (complete / total * 100) if total else 0
 
-            nice_name = activity.replace("_", " ").title()
+            self.activities.append({
+                "key": activity,
+                "name": activity.replace("_", " ").title(),
+                "items": items,
+                "complete": complete,
+                "total": total,
+                "percent": percent,
+            })
 
-            card = ActivityCard(
-                nice_name,
-                complete,
-                total,
+        self.populate()
+
+    def populate(self):
+
+        self.activityList.clear()
+
+        for activity in self.activities:
+
+            text = (
+                f"{activity['name']}\n"
+                f"{activity['complete']}/{activity['total']} "
+                f"({activity['percent']:.1f}%)"
             )
 
-            self.layout.addWidget(card)
+            item = QListWidgetItem(text)
+            item.setData(Qt.UserRole, activity)
 
-            self.cards.append((nice_name.lower(), card))
+            self.activityList.addItem(item)
 
-        self.layout.addStretch()
-
-        scroll.setWidget(container)
-
-        root.addWidget(scroll)
-
-        self.setLayout(root)
+        if self.activityList.count():
+            self.activityList.setCurrentRow(0)
 
     def filter(self, text):
 
         text = text.lower()
 
-        for name, card in self.cards:
-            card.setVisible(text in name)
+        self.activityList.clear()
+
+        for activity in self.activities:
+
+            if text in activity["name"].lower():
+
+                item = QListWidgetItem(
+                    f"{activity['name']}\n"
+                    f"{activity['complete']}/{activity['total']} "
+                    f"({activity['percent']:.1f}%)"
+                )
+
+                item.setData(Qt.UserRole, activity)
+
+                self.activityList.addItem(item)
+
+    def load_activity(self, current, previous):
+
+        if current is None:
+            return
+
+        activity = current.data(Qt.UserRole)
+
+        self.title.setText(activity["name"])
+
+        self.progress.setValue(int(activity["percent"]))
+
+        self.percent.setText(
+            f"{activity['complete']} / {activity['total']} Items"
+        )
+
+        self.items.clear()
+
+        for item in activity["items"]:
+
+            if item["count"]:
+                self.items.addItem(f"☑ {item['name']}")
+            else:
+                self.items.addItem(f"☐ {item['name']}")

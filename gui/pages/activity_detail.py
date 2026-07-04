@@ -3,8 +3,8 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QLabel,
-    QPushButton,
     QListWidget,
+    QPushButton,
 )
 
 
@@ -13,53 +13,44 @@ class ActivityDetailPage(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.activity_key = None
-
         layout = QVBoxLayout()
 
-        self.back_button = QPushButton("← Back")
+        self.backButton = QPushButton("← Back")
 
-        self.title = QLabel("Activity")
+        self.title = QLabel()
         self.title.setObjectName("CardTitle")
 
-        self.progress = QLabel("")
+        self.progress = QLabel()
         self.progress.setAlignment(Qt.AlignCenter)
 
-        self.list = QListWidget()
+        self.items = QListWidget()
 
-        layout.addWidget(self.back_button)
+        layout.addWidget(self.backButton)
         layout.addWidget(self.title)
         layout.addWidget(self.progress)
-        layout.addWidget(self.list)
+        layout.addWidget(self.items)
 
         self.setLayout(layout)
 
-    def load_activity(self, player, activity_key):
+    def load_activity(self, player, activity):
 
-        self.activity_key = activity_key
+        self.items.clear()
 
         self.title.setText(
-            activity_key.replace("_", " ").title()
+            activity.replace("_", " ").title()
         )
 
-        self.list.clear()
+        entries = player["activities"][activity]
 
-        items = player["activities"][activity_key]
+        total = len(entries)
+        complete = sum(i["count"] > 0 for i in entries)
 
-        total = len(items)
+        self.progress.setText(f"{complete}/{total} Items")
 
-        complete = sum(
-            1 for item in items
-            if item["count"] > 0
-        )
+        for item in entries:
 
-        self.progress.setText(
-            f"{complete}/{total} Items"
-        )
+            icon = "☑" if item["count"] else "☐"
 
-        for item in items:
-
-            if item["count"] == 0:
-                self.list.addItem(f"☐ {item['name']}")
-            else:
-                self.list.addItem(f"☑ {item['name']}")
+            self.items.addItem(
+                f"{icon} {item['name']}"
+            )
