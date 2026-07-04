@@ -56,11 +56,15 @@ class CollectionPage(QWidget):
         self.percent = QLabel("")
         self.percent.setAlignment(Qt.AlignCenter)
 
+        self.remaining = QLabel("")
+        self.remaining.setAlignment(Qt.AlignCenter)
+
         self.items = QListWidget()
 
         right.addWidget(self.title)
         right.addWidget(self.progress)
         right.addWidget(self.percent)
+        right.addWidget(self.remaining)
         right.addWidget(self.items)
 
         root.addLayout(left, 1)
@@ -125,6 +129,9 @@ class CollectionPage(QWidget):
 
                 self.activityList.addItem(item)
 
+        if self.activityList.count():
+            self.activityList.setCurrentRow(0)
+
     def load_activity(self, current, previous):
 
         if current is None:
@@ -136,15 +143,34 @@ class CollectionPage(QWidget):
 
         self.progress.setValue(int(activity["percent"]))
 
+        remaining = activity["total"] - activity["complete"]
+
         self.percent.setText(
-            f"{activity['complete']} / {activity['total']} Items"
+            f"{activity['complete']} / {activity['total']} Items\n"
+            f"{activity['percent']:.1f}% Complete"
         )
+
+        if remaining == 0:
+            self.remaining.setText("🟢 Green Logged")
+        elif remaining == 1:
+            self.remaining.setText("🔴 Remaining: 1 Item")
+        else:
+            self.remaining.setText(f"🔴 Remaining: {remaining} Items")
 
         self.items.clear()
 
-        for item in activity["items"]:
+        self.items.addItem("🔴 Missing Items")
+        self.items.addItem("────────────────")
 
-            if item["count"]:
-                self.items.addItem(f"☑ {item['name']}")
-            else:
+        for item in activity["items"]:
+            if item["count"] == 0:
                 self.items.addItem(f"☐ {item['name']}")
+
+        self.items.addItem("")
+
+        self.items.addItem("🟢 Owned Items")
+        self.items.addItem("────────────────")
+
+        for item in activity["items"]:
+            if item["count"] > 0:
+                self.items.addItem(f"☑ {item['name']}")

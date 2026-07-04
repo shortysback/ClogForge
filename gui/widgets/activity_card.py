@@ -21,8 +21,18 @@ class ActivityCard(QFrame):
 
         percent = (complete / total * 100) if total else 0
 
+        if percent == 100:
+            color = "#2ECC71"
+        elif percent >= 75:
+            color = "#7ED957"
+        elif percent >= 50:
+            color = "#F1C40F"
+        elif percent >= 25:
+            color = "#E67E22"
+        else:
+            color = "#E74C3C"
+
         layout = QVBoxLayout(self)
-        layout.setSpacing(8)
 
         title = QLabel(name)
         title.setObjectName("CardTitle")
@@ -31,6 +41,20 @@ class ActivityCard(QFrame):
         progress.setRange(0, 100)
         progress.setValue(int(percent))
         progress.setTextVisible(False)
+
+        progress.setStyleSheet(f"""
+            QProgressBar {{
+                border:none;
+                background:#1E1F22;
+                border-radius:8px;
+                height:18px;
+            }}
+
+            QProgressBar::chunk {{
+                background:{color};
+                border-radius:8px;
+            }}
+        """)
 
         value = QLabel(f"{complete}/{total} items")
         value.setAlignment(Qt.AlignCenter)
