@@ -16,9 +16,8 @@ from core.settings import load_settings, save_settings
 from core.api.temple import sync_player
 
 from gui.pages.dashboard import DashboardPage
-from gui.pages.activities import ActivitiesPage
+from gui.pages.collection import CollectionPage
 from gui.pages.reports import ReportsPage
-from gui.pages.rates import RatesPage
 from gui.pages.settings import SettingsPage
 
 
@@ -28,7 +27,7 @@ class MainWindow(QMainWindow):
 
         self.settings = load_settings()
 
-        self.setWindowTitle("LogForge")
+        self.setWindowTitle("ClogForge")
         self.resize(1400, 850)
 
         #
@@ -57,9 +56,8 @@ class MainWindow(QMainWindow):
         self.sidebar = QListWidget()
         self.sidebar.addItems([
             "Dashboard",
-            "Activities",
+            "Collection",
             "Reports",
-            "Rates",
             "Settings",
         ])
         self.sidebar.setMaximumWidth(180)
@@ -70,9 +68,8 @@ class MainWindow(QMainWindow):
 
         self.pages = QStackedWidget()
         self.pages.addWidget(DashboardPage())
-        self.pages.addWidget(ActivitiesPage())
+        self.pages.addWidget(CollectionPage())
         self.pages.addWidget(ReportsPage())
-        self.pages.addWidget(RatesPage())
         self.pages.addWidget(SettingsPage())
 
         self.sidebar.currentRowChanged.connect(self.pages.setCurrentIndex)

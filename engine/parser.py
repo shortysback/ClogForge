@@ -3,6 +3,7 @@ import os
 
 
 def load_player(player_name):
+
     filename = os.path.join(
         "data",
         "players",
@@ -12,7 +13,6 @@ def load_player(player_name):
     with open(filename, "r", encoding="utf-8") as f:
         raw = json.load(f)
 
-    # Temple wraps everything inside "data"
     data = raw["data"]
 
     return {
@@ -24,4 +24,5 @@ def load_player(player_name):
             data["total_collections_finished"]
             / data["total_collections_available"]
         ) * 100,
+        "activities": data["items"],
     }
