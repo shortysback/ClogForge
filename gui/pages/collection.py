@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QProgressBar,
     QCheckBox,
+    QComboBox,
 )
 
 from core.settings import load_settings
@@ -30,6 +31,16 @@ class CollectionPage(QWidget):
         #
 
         left = QVBoxLayout()
+        self.sort = QComboBox()
+
+        self.sort.addItems([
+            "Alphabetical",
+            "Highest Completion",
+            "Lowest Completion",
+            "Fewest Remaining",
+        ])
+
+        self.sort.currentIndexChanged.connect(self.populate)
 
         self.search = QLineEdit()
         self.search.setPlaceholderText("Search activities...")
@@ -38,6 +49,7 @@ class CollectionPage(QWidget):
         self.activityList = QListWidget()
         self.activityList.currentItemChanged.connect(self.load_activity)
 
+        left.addWidget(self.sort)
         left.addWidget(self.search)
         left.addWidget(self.activityList)
 
@@ -98,14 +110,35 @@ class CollectionPage(QWidget):
 
         self.activityList.clear()
 
-        for activity in self.activities:
+        activities = self.activities.copy()
 
-            text = (
-                f"{activity['name']}\n"
-                f"{activity['complete']}/{activity['total']} "
-                f"({activity['percent']:.1f}%)"
+        sort = self.sort.currentText()
+
+        if sort == "Alphabetical":
+            activities.sort(key=lambda a: a["name"])
+
+        elif sort == "Highest Completion":
+            activities.sort(
+                key=lambda a: a["percent"],
+                reverse=True
             )
 
+        elif sort == "Lowest Completion":
+            activities.sort(
+                key=lambda a: a["percent"]
+            )
+
+        elif sort == "Fewest Remaining":
+            activities.sort(
+                key=lambda a: a["total"] - a["complete"]
+            )
+
+        for activity in activities:
+
+            text = (
+                f"{activity['name']:<28}"
+                f"{activity['percent']:>5.1f}%"
+            )
             item = QListWidgetItem(text)
             item.setData(Qt.UserRole, activity)
 
@@ -176,8 +209,12 @@ class CollectionPage(QWidget):
 
         self.items.clear()
 
-        self.items.addItem("🔴 Missing Items")
-        self.items.addItem("────────────────")
+        missing = sum(
+        1 for item in activity["items"]
+        if item["count"] == 0
+        )
+
+        self.items.addItem(f"Missing Items ({missing})")
 
         for item in activity["items"]:
             if item["count"] == 0:
@@ -192,8 +229,12 @@ class CollectionPage(QWidget):
 
         self.items.addItem("")
 
-        self.items.addItem("🟢 Owned Items")
-        self.items.addItem("────────────────")
+        owned = sum(
+            1 for item in activity["items"]
+            if item["count"] > 0
+        )
+
+        self.items.addItem(f"Owned Items ({owned})")
 
         for item in activity["items"]:
             if item["count"] > 0:
