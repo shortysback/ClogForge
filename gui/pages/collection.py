@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QProgressBar,
+    QCheckBox,
 )
 
 from core.settings import load_settings
@@ -59,12 +60,16 @@ class CollectionPage(QWidget):
         self.remaining = QLabel("")
         self.remaining.setAlignment(Qt.AlignCenter)
 
+        self.hideOwned = QCheckBox("Hide Owned Items")
+        self.hideOwned.stateChanged.connect(self.refresh_items)
+
         self.items = QListWidget()
 
         right.addWidget(self.title)
         right.addWidget(self.progress)
         right.addWidget(self.percent)
         right.addWidget(self.remaining)
+        right.addWidget(self.hideOwned)
         right.addWidget(self.items)
 
         root.addLayout(left, 1)
@@ -119,12 +124,13 @@ class CollectionPage(QWidget):
 
             if text in activity["name"].lower():
 
-                item = QListWidgetItem(
+                text = (
                     f"{activity['name']}\n"
                     f"{activity['complete']}/{activity['total']} "
                     f"({activity['percent']:.1f}%)"
                 )
 
+                item = QListWidgetItem(text)
                 item.setData(Qt.UserRole, activity)
 
                 self.activityList.addItem(item)
@@ -137,7 +143,9 @@ class CollectionPage(QWidget):
         if current is None:
             return
 
-        activity = current.data(Qt.UserRole)
+        self.currentActivity = current.data(Qt.UserRole)
+
+        activity = self.currentActivity
 
         self.title.setText(activity["name"])
 
@@ -157,6 +165,15 @@ class CollectionPage(QWidget):
         else:
             self.remaining.setText(f"🔴 Remaining: {remaining} Items")
 
+        self.refresh_items()
+
+    def refresh_items(self):
+
+        if not hasattr(self, "currentActivity"):
+            return
+
+        activity = self.currentActivity
+
         self.items.clear()
 
         self.items.addItem("🔴 Missing Items")
@@ -165,6 +182,9 @@ class CollectionPage(QWidget):
         for item in activity["items"]:
             if item["count"] == 0:
                 self.items.addItem(f"☐ {item['name']}")
+
+        if self.hideOwned.isChecked():
+            return
 
         self.items.addItem("")
 
